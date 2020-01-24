@@ -13,6 +13,10 @@ const char* ntpServer = "tick.stdtime.gov.tw";
 const long  gmtOffset_sec = 60 * 60 * 8; // GMT+8
 const int   daylightOffset_sec = 3600;
 
+const int16_t topY = 6;
+const int16_t baseY = 10;
+const int16_t lineHeight = 28;
+
 int status = WL_IDLE_STATUS;     // the Wifi radio's status
 
 void printWifiData() {
@@ -75,6 +79,37 @@ void printCurrentNet() {
   // Serial.println();
 }
 
+int16_t getYPosition(int8_t line) {
+  line = line - 1;
+
+  if (line == 0) return baseY + topY;
+
+  int16_t y = 
+    (lineHeight * line) + (baseY * line);
+
+  return y;
+}
+
+void PrintWeekday(tm timeinfo) {
+  M5.Lcd.setCursor(15, getYPosition(1));
+  M5.Lcd.print(&timeinfo, "%A");
+}
+
+void PrintDateTime(tm timeinfo) {
+  M5.Lcd.setCursor(15, getYPosition(2));
+  M5.Lcd.print(&timeinfo, "%B %d %Y %H:%M:%S");
+}
+
+void refreshDateTimeOnly() {
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    M5.Lcd.println("Failed to obtain time");
+    return;
+  }
+
+  PrintDateTime(timeinfo);
+}
+
 void printLocalTime()
 {
   struct tm timeinfo;
@@ -82,12 +117,17 @@ void printLocalTime()
     M5.Lcd.println("Failed to obtain time");
     return;
   }
-  M5.Lcd.setCursor(5, 2);
-  // M5.Lcd.println(&timeinfo, "%A, \r\n%B %d %Y %H:%M:%S");
-  M5.Lcd.println(&timeinfo, "%A");
-  M5.Lcd.setCursor(5, 28);
-  M5.Lcd.println(&timeinfo, "%B %d %Y %H:%M:%S");
+  // //M5.Lcd.setCursor(15, 10);
+  // M5.Lcd.setCursor(15, getYPosition(1));
+  // // M5.Lcd.println(&timeinfo, "%A, \r\n%B %d %Y %H:%M:%S");
+  // M5.Lcd.print(&timeinfo, "%A");
+  PrintWeekday(timeinfo);
+  // //M5.Lcd.setCursor(15, 38);
+  // M5.Lcd.setCursor(15, getYPosition(2));
+  // M5.Lcd.print(&timeinfo, "%B %d %Y %H:%M:%S");
+  PrintDateTime(timeinfo);
 }
+
 
 void setup() {
   M5.begin();
@@ -120,9 +160,10 @@ void setup() {
 }
 
 void loop() {
-  M5.Lcd.clearDisplay();
+  // M5.Lcd.clearDisplay();
   M5.Lcd.setCursor(0, 0);
-  printLocalTime();
+  // printLocalTime();
+  refreshDateTimeOnly();
 
   delay(1000);
 }
